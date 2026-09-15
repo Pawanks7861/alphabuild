@@ -5,27 +5,32 @@ chdir(dirname(__DIR__, 2));
 $appUrl = getenv('PERFEX_APP_URL') ?: 'http://127.0.0.1:8080/';
 $upgradeUrl = rtrim($appUrl, '/') . '/admin';
 
-$ch = curl_init($upgradeUrl);
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST => true,
-    CURLOPT_POSTFIELDS => 'upgrade_database=true',
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_TIMEOUT => 300,
-]);
-$output = curl_exec($ch);
-$status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+for ($attempt = 1; $attempt <= 5; $attempt++) {
+    $ch = curl_init($upgradeUrl);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => 'upgrade_database=true',
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT => 600,
+    ]);
+    $output = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-if ($status >= 500 || $output === false) {
-    fwrite(STDERR, "Database upgrade request failed with HTTP {$status}.\n");
-    exit(1);
-}
+    if ($status < 500 && $output !== false && stripos((string) $output, 'Database upgrade is required') === false) {
+        break;
+    }
 
-if (stripos((string) $output, 'Database upgrade is required') !== false) {
-    fwrite(STDERR, "Database upgrade did not complete.\n");
-    fwrite(STDERR, substr((string) $output, 0, 2000) . PHP_EOL);
-    exit(1);
+    if ($attempt === 5) {
+        fwrite(STDERR, "Database upgrade request failed with HTTP {$status}.\n");
+        if ($output) {
+            fwrite(STDERR, substr((string) $output, 0, 2000) . PHP_EOL);
+        }
+        exit(1);
+    }
+
+    sleep(3);
 }
 
 $version = null;

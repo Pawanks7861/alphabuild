@@ -41,8 +41,6 @@ if [[ "${TABLE_COUNT}" == "0" ]]; then
   mysql_exec "${DB_NAME}" < "${SQL_FILE}"
 fi
 
-"${ROOT_DIR}/.cursor/scripts/apply-custom-tables.sh"
-
 if [[ ! -f "${APP_CONFIG}" ]]; then
   echo "Creating application/config/app-config.php..."
   cat > "${APP_CONFIG}" <<PHP
@@ -66,10 +64,6 @@ define('APP_LOG_THRESHOLD', 4);
 PHP
 fi
 
-php "${ROOT_DIR}/.cursor/scripts/seed-admin.php" \
-  --email="${ADMIN_EMAIL}" \
-  --password="${ADMIN_PASSWORD}"
-
 CURRENT_VERSION="$(mysql_exec -N -e "SELECT version FROM \`${DB_NAME}\`.tblmigrations LIMIT 1;")"
 TARGET_VERSION="316"
 
@@ -77,6 +71,12 @@ if [[ "${CURRENT_VERSION}" != "${TARGET_VERSION}" ]]; then
   echo "Upgrading database from ${CURRENT_VERSION} to ${TARGET_VERSION}..."
   php "${ROOT_DIR}/.cursor/scripts/run-db-upgrade.php"
 fi
+
+"${ROOT_DIR}/.cursor/scripts/apply-custom-tables.sh"
+
+php "${ROOT_DIR}/.cursor/scripts/seed-admin.php" \
+  --email="${ADMIN_EMAIL}" \
+  --password="${ADMIN_PASSWORD}"
 
 echo "Database bootstrap complete."
 echo "Admin login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}"

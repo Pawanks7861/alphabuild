@@ -1,0 +1,23 @@
+{
+  "name": "HSBprojects Buildify360",
+  "short_name": "HSBprojects Buildify360",
+  "description": "Construction ERP Software",
+  "start_url": "/admin/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#238ee0",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/media/icons/pwa_logo_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/media/icons/pwa_logo_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

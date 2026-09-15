@@ -32,7 +32,8 @@ $version = null;
 $appConfig = file_get_contents('application/config/app-config.php');
 if (preg_match("/define\\('APP_DB_NAME', '([^']+)'\\)/", $appConfig, $matches)) {
     $dbName = $matches[1];
-    $mysqli = @new mysqli('localhost', 'alphabuild', 'alphabuild', $dbName, 3306, '/var/run/mysqld/mysqld.sock');
+    $socket = getenv('MYSQL_SOCKET') ?: dirname(__DIR__, 2) . '/.cursor/dev/mysql-run/mysqld.sock';
+    $mysqli = @new mysqli('localhost', 'alphabuild', 'alphabuild', $dbName, 3306, $socket);
     if ($mysqli->connect_errno) {
         $mysqli = new mysqli('localhost', 'alphabuild', 'alphabuild', $dbName);
     }

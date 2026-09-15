@@ -3,8 +3,7 @@
 CREATE TABLE `tblforms` LIKE `tbltickets`;
 ALTER TABLE `tblforms`
   CHANGE `ticketid` `formid` int(11) NOT NULL AUTO_INCREMENT,
-  CHANGE `ticketkey` `formkey` varchar(32) NOT NULL,
-  CHANGE `merged_ticket_id` `merged_form_id` int(11) DEFAULT NULL;
+  CHANGE `ticketkey` `formkey` varchar(32) NOT NULL;
 
 CREATE TABLE `tblforms_status` LIKE `tbltickets_status`;
 ALTER TABLE `tblforms_status`

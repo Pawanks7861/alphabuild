@@ -1,2 +1,5 @@
 /nbproject/private/
 application/config/app-config.php
+.cursor/dev/mysql-data/
+.cursor/dev/mysql-run/
+node_modules/

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$(dirname "$0")/mysql-env.sh"
+
 DB_NAME="${PERFEX_DB_NAME:-alphabuild}"
-MYSQL_SOCKET="/var/run/mysqld/mysqld.sock"
 
 mysql_exec() {
   if mysql --socket="${MYSQL_SOCKET}" -uroot "$@" 2>/dev/null; then
@@ -17,4 +18,6 @@ if mysql_exec -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_
 fi
 
 echo "Creating AlphaBuild custom tables..."
-mysql_exec "${DB_NAME}" < "$(dirname "$0")/../dev/custom-tables.sql"
+if ! mysql_exec "${DB_NAME}" < "$(dirname "$0")/../dev/custom-tables.sql"; then
+  echo "Warning: custom table bootstrap reported errors; continuing if core tables exist."
+fi

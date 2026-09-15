@@ -12,7 +12,7 @@ $host = getenv('PERFEX_DB_HOST') ?: 'localhost';
 $user = getenv('PERFEX_DB_USER') ?: 'alphabuild';
 $pass = getenv('PERFEX_DB_PASS') ?: 'alphabuild';
 $name = getenv('PERFEX_DB_NAME') ?: 'alphabuild';
-$socket = '/var/run/mysqld/mysqld.sock';
+$socket = getenv('MYSQL_SOCKET') ?: dirname(__DIR__, 2) . '/.cursor/dev/mysql-run/mysqld.sock';
 
 $mysqli = @new mysqli($host, $user, $pass, $name, 3306, $socket);
 if ($mysqli->connect_errno) {

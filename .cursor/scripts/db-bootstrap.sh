@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$(dirname "$0")/mysql-env.sh"
+
 SQL_FILE="${ROOT_DIR}/.cursor/dev/database.sql"
 APP_CONFIG="${ROOT_DIR}/application/config/app-config.php"
-MYSQL_SOCKET="/var/run/mysqld/mysqld.sock"
 
 DB_NAME="${PERFEX_DB_NAME:-alphabuild}"
 DB_USER="${PERFEX_DB_USER:-alphabuild}"
@@ -23,6 +23,7 @@ mysql_exec() {
 }
 
 "${ROOT_DIR}/.cursor/scripts/start-services.sh"
+source "$(dirname "$0")/mysql-env.sh"
 
 if [[ ! -f "${SQL_FILE}" ]]; then
   echo "Missing database seed at ${SQL_FILE}"

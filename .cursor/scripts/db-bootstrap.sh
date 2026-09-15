@@ -16,10 +16,7 @@ ADMIN_PASSWORD="${PERFEX_ADMIN_PASSWORD:-admin123456}"
 ENC_KEY="${PERFEX_ENC_KEY:-$(openssl rand -hex 16)}"
 
 mysql_exec() {
-  if mysql --socket="${MYSQL_SOCKET}" -uroot "$@" 2>/dev/null; then
-    return 0
-  fi
-  sudo mysql --socket="${MYSQL_SOCKET}" "$@"
+  mysql_admin_exec "$@"
 }
 
 "${ROOT_DIR}/.cursor/scripts/start-services.sh"
@@ -69,7 +66,7 @@ TARGET_VERSION="316"
 
 if [[ "${CURRENT_VERSION}" != "${TARGET_VERSION}" ]]; then
   echo "Upgrading database from ${CURRENT_VERSION} to ${TARGET_VERSION}..."
-  php "${ROOT_DIR}/.cursor/scripts/run-db-upgrade.php"
+  php "${ROOT_DIR}/.cursor/scripts/run-db-upgrade-cli.php"
 fi
 
 "${ROOT_DIR}/.cursor/scripts/apply-custom-tables.sh"

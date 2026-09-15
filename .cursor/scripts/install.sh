@@ -11,6 +11,7 @@ else
 fi
 
 chmod +x .cursor/scripts/*.sh .cursor/scripts/apply-custom-tables.sh
+mkdir -p uploads/{clients,staff,projects,proposals,leads,invoices,estimates,expenses,credit_notes,ticket_attachments,contracts,tasks,forms}
 "${ROOT_DIR}/.cursor/scripts/db-bootstrap.sh"
 
 echo "Install complete."

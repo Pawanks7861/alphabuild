@@ -11,3 +11,24 @@ if [[ -f "${MYSQL_RUN_DIR}/socket" ]]; then
 fi
 
 export ROOT_DIR MYSQL_RUN_DIR MYSQL_DATADIR MYSQL_SOCKET MYSQL_PID_FILE
+
+mysql_try() {
+  if "$@" 2>/dev/null; then
+    return 0
+  fi
+
+  if command -v sudo >/dev/null 2>&1; then
+    sudo "$@" 2>/dev/null
+  else
+    return 1
+  fi
+}
+
+mysql_admin_exec() {
+  if [[ -d "${MYSQL_DATADIR}/mysql" ]]; then
+    mysql_try mysql --socket="${MYSQL_SOCKET}" -uubuntu "$@" && return 0
+  fi
+
+  mysql_try mysql --socket="${MYSQL_SOCKET}" -uroot "$@" && return 0
+  mysql_try mysql --socket="${MYSQL_SOCKET}" "$@"
+}

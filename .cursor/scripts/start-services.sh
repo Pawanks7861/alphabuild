@@ -8,7 +8,8 @@ APACHE_PORT="${APACHE_PORT:-8080}"
 mkdir -p "${MYSQL_RUN_DIR}" "${MYSQL_DATADIR}"
 
 mysql_ping() {
-  mysqladmin ping --socket="${MYSQL_SOCKET}" -uroot --silent 2>/dev/null \
+  mysqladmin ping --socket="${MYSQL_SOCKET}" -uubuntu --silent 2>/dev/null \
+    || mysqladmin ping --socket="${MYSQL_SOCKET}" -uroot --silent 2>/dev/null \
     || sudo mysqladmin ping --socket="${MYSQL_SOCKET}" -uroot --silent 2>/dev/null
 }
 
@@ -77,18 +78,22 @@ if ! mysql_ping; then
   exit 1
 fi
 
-if ! curl -fsS "http://127.0.0.1:${APACHE_PORT}/" >/dev/null 2>&1; then
+web_server_ready() {
+  curl -sS --max-time 2 "http://127.0.0.1:${APACHE_PORT}/" >/dev/null 2>&1
+}
+
+if ! web_server_ready; then
   echo "Starting PHP dev server on port ${APACHE_PORT}..."
   php -S "127.0.0.1:${APACHE_PORT}" -t /workspace /workspace/.cursor/scripts/php-router.php >/tmp/php-server.log 2>&1 &
   for _ in $(seq 1 20); do
-    if curl -fsS "http://127.0.0.1:${APACHE_PORT}/" >/dev/null 2>&1; then
+    if web_server_ready; then
       break
     fi
     sleep 1
   done
 fi
 
-if ! curl -fsS "http://127.0.0.1:${APACHE_PORT}/" >/dev/null 2>&1; then
+if ! web_server_ready; then
   echo "Web server failed to start. See /tmp/php-server.log"
   exit 1
 fi

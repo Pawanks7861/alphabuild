@@ -4,26 +4,43 @@ set -euo pipefail
 source "$(dirname "$0")/mysql-env.sh"
 
 APACHE_PORT="${APACHE_PORT:-8080}"
+LOCAL_SOCKET="${MYSQL_RUN_DIR}/mysqld.sock"
+SYSTEM_SOCKET="/var/run/mysqld/mysqld.sock"
 
 mkdir -p "${MYSQL_RUN_DIR}" "${MYSQL_DATADIR}"
 
-mysql_ping() {
-  mysqladmin ping --socket="${MYSQL_SOCKET}" -uubuntu --silent 2>/dev/null \
-    || mysqladmin ping --socket="${MYSQL_SOCKET}" -uroot --silent 2>/dev/null \
-    || sudo mysqladmin ping --socket="${MYSQL_SOCKET}" -uroot --silent 2>/dev/null
+mysql_ping_socket() {
+  local socket="$1"
+  mysqladmin ping --socket="${socket}" -uubuntu --silent 2>/dev/null \
+    || mysqladmin ping --socket="${socket}" -uroot --silent 2>/dev/null \
+    || { command -v sudo >/dev/null 2>&1 && sudo mysqladmin ping --socket="${socket}" -uroot --silent 2>/dev/null; }
 }
 
-if mysqladmin ping --socket="/var/run/mysqld/mysqld.sock" -uroot --silent 2>/dev/null \
-  || sudo mysqladmin ping --socket="/var/run/mysqld/mysqld.sock" -uroot --silent 2>/dev/null; then
-  MYSQL_SOCKET="/var/run/mysqld/mysqld.sock"
-  export MYSQL_SOCKET
-fi
+mysql_ping() {
+  mysql_ping_socket "${MYSQL_SOCKET}"
+}
+
+detect_running_mariadb() {
+  if mysql_ping_socket "${LOCAL_SOCKET}"; then
+    MYSQL_SOCKET="${LOCAL_SOCKET}"
+    export MYSQL_SOCKET
+    return 0
+  fi
+
+  if mysql_ping_socket "${SYSTEM_SOCKET}"; then
+    MYSQL_SOCKET="${SYSTEM_SOCKET}"
+    export MYSQL_SOCKET
+    return 0
+  fi
+
+  return 1
+}
 
 start_system_mariadb() {
   local system_run_dir="/var/run/mysqld"
   mkdir -p "${system_run_dir}" 2>/dev/null || sudo mkdir -p "${system_run_dir}"
   chown mysql:mysql "${system_run_dir}" 2>/dev/null || sudo chown mysql:mysql "${system_run_dir}" 2>/dev/null || true
-  MYSQL_SOCKET="${system_run_dir}/mysqld.sock"
+  MYSQL_SOCKET="${SYSTEM_SOCKET}"
   export MYSQL_SOCKET
 
   if command -v sudo >/dev/null 2>&1; then
@@ -40,6 +57,9 @@ start_system_mariadb() {
 }
 
 start_local_mariadb() {
+  MYSQL_SOCKET="${LOCAL_SOCKET}"
+  export MYSQL_SOCKET
+
   if [[ ! -d "${MYSQL_DATADIR}/mysql" ]]; then
     echo "Initializing local MariaDB data directory at ${MYSQL_DATADIR}..."
     if command -v mariadb-install-db >/dev/null 2>&1; then
@@ -57,16 +77,16 @@ start_local_mariadb() {
     --port=3307 >/tmp/mariadb.log 2>&1 &
 }
 
-if ! mysql_ping; then
+if ! detect_running_mariadb; then
   echo "Starting MariaDB..."
-  if [[ -w /var/run ]] && [[ -d /var/lib/mysql ]]; then
+  if [[ -w /var/run ]] && [[ -d /var/lib/mysql ]] && command -v sudo >/dev/null 2>&1; then
     start_system_mariadb || start_local_mariadb
   else
     start_local_mariadb
   fi
 
   for _ in $(seq 1 45); do
-    if mysql_ping; then
+    if detect_running_mariadb; then
       break
     fi
     sleep 1

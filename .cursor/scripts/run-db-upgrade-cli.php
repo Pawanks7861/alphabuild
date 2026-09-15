@@ -3,6 +3,10 @@
 chdir(dirname(__DIR__, 2));
 
 $root = getcwd();
+$socketFile = $root . '/.cursor/dev/mysql-run/socket';
+if (is_readable($socketFile)) {
+    putenv('MYSQL_SOCKET=' . trim((string) file_get_contents($socketFile)));
+}
 $environment = 'production';
 
 $_SERVER['HTTP_HOST'] = '127.0.0.1:8080';

@@ -9,8 +9,14 @@ APP_CONFIG="${ROOT_DIR}/application/config/app-config.php"
 DB_NAME="${PERFEX_DB_NAME:-alphabuild}"
 DB_USER="${PERFEX_DB_USER:-alphabuild}"
 DB_PASS="${PERFEX_DB_PASS:-alphabuild}"
-DB_HOST="${PERFEX_DB_HOST:-localhost}"
 APP_URL="${PERFEX_APP_URL:-http://127.0.0.1:8080/}"
+
+if [[ "${MYSQL_SOCKET}" == "${ROOT_DIR}/.cursor/dev/mysql-run/mysqld.sock" ]] \
+  || [[ -d "${MYSQL_DATADIR}/mysql" ]]; then
+  DB_HOST="${MYSQL_SOCKET}"
+else
+  DB_HOST="${PERFEX_DB_HOST:-localhost}"
+fi
 ADMIN_EMAIL="${PERFEX_ADMIN_EMAIL:-admin@example.com}"
 ADMIN_PASSWORD="${PERFEX_ADMIN_PASSWORD:-admin123456}"
 ENC_KEY="${PERFEX_ENC_KEY:-$(openssl rand -hex 16)}"

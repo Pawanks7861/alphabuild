@@ -1,0 +1,22 @@
+{
+  "name": "AlphaBuild (Perfex CRM)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "user": "ubuntu",
+  "install": "chmod +x .cursor/scripts/*.sh && ./.cursor/scripts/install.sh",
+  "start": "./.cursor/scripts/start-services.sh",
+  "terminals": [
+    {
+      "name": "web",
+      "command": "php -S 127.0.0.1:8080 -t /workspace /workspace/.cursor/scripts/php-router.php"
+    }
+  ],
+  "ports": [
+    {
+      "name": "web",
+      "port": 8080
+    }
+  ]
+}
